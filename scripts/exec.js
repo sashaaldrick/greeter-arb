@@ -39,9 +39,10 @@ const l1Wallet = new Wallet(walletPrivateKey, l1Provider)
 const l2Wallet = new Wallet(walletPrivateKey, l2Provider)
 
 const main = async () => {
+    // based A
     await arbLog('Cross-chain Greeter')
 
-    // 1. INITIAL SETUP
+    // 1. INITIAL SETUP - DEPLOYING REQUIRED CONTRACTS WITH CORRECT STATE
     // Getting the inbox address using the Arbitrum SDK
     const l2Network = await getL2Network(l2Provider)
     const ethBridger = new EthBridger(l2Network)
@@ -84,7 +85,7 @@ const main = async () => {
     await updateL2Tx.wait()
     console.log('Counterpart contract addresses set in both greeters 👍')
 
-    // logging the current greeting on L2
+    // Logging the current greeting on L2
     const currentL2Greeting = await l2Greeter.greet()
     console.log(`Current L2 greeting: "${currentL2Greeting}"`)
 
@@ -93,14 +94,13 @@ const main = async () => {
     console.log('Updating greeting from L1 to L2:')
     const newGreeting = 'Greeting from far, far away'
 
-
-    // to esimate gas correctly, we need to know how many bytes of calldata we need
+    // To esimate gas correctly, we need to know how many bytes of calldata we need
     const l1ToL2MessageGasEstimate = new L1ToL2MessageGasEstimator(l2Provider)
     const ABI = ['function setGreeting(string _greeting)']
     const iface = new ethers.utils.Interface(ABI)
     const calldata = iface.encodeFunctionData('setGreeting', [newGreeting])
 
-    // Calling estimateAll to get the gas params for our message
+    // Calling estimateAll to get the gas params for our messagec
     const L1ToL2MessageGasParams = await l1ToL2MessageGasEstimate.estimateAll(
         {
             from: await l1Greeter.address,
@@ -122,17 +122,17 @@ const main = async () => {
     const gasPriceBid = await l2Provider.getGasPrice()
     console.log(`L2 gas price: ${gasPriceBid.toString()}`)
 
-    // SENDING MESSAGE VIA GREETERL1
+    // SENDING MESSAGE VIA GreeterL1.sol
     console.log(
         `Sending greeting to L2 with ${L1ToL2MessageGasParams.deposit.toString()} callValue for L2 fees:`
     )
     const setGreetingTx = await l1Greeter.setGreetingInL2(
         newGreeting, // string memory _greeting,
-        L1ToL2MessageGasParams.maxSubmissionCost,
-        L1ToL2MessageGasParams.gasLimit,
+        L1ToL2MessageGasParams.maxSubmissionCost, // Max cost when submitting transaction
+        L1ToL2MessageGasParams.gasLimit, // L2 Gas Limit
         gasPriceBid,
         {
-            value: L1ToL2MessageGasParams.deposit,
+            value: L1ToL2MessageGasParams.deposit, // The total amount to deposit on L1 to cover L2 gas & call value
         }
     )
     const setGreetingRec = await setGreetingTx.wait()
@@ -159,12 +159,6 @@ const main = async () => {
             `L2 retryable ticket is failed with status ${L1ToL2MessageStatus[status]}`
         )
     }
-
-    /**
-     * Note that during L2 execution, a retryable's sender address is transformed to its L2 alias.
-     * Thus, when GreeterL2 checks that the message came from the L1, we check that the sender is this L2 Alias.
-     * See setGreeting in GreeterL2.sol for this check.
-     */
 
     // Calling greet() on L2 to see the updated greeting.
     const newGreetingL2 = await l2Greeter.greet()
