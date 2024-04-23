@@ -26,7 +26,7 @@ const {
 const { getBaseFee } = require('@arbitrum/sdk/dist/lib/utils/lib')
 const { arbLog, requireEnvVariables } = require('./arb-shared-dependencies')
 
-// You'll need a wallet and RPC URLs, otherwise thou shalt not pass
+// You'll need a wallet and RPC URLs, otherwise thou shalt not pass 🧙
 requireEnvVariables(['DEVNET_PRIVKEY', 'L2RPC', 'L1RPC'])
 
 // Set up L1/L2 wallets from the same key. Make sure to populate .env and have it funded on both Ethereum/Arbitrum Sepolia.
@@ -100,7 +100,7 @@ const main = async () => {
     const iface = new ethers.utils.Interface(ABI)
     const calldata = iface.encodeFunctionData('setGreeting', [newGreeting])
 
-    // calling estimateAll to get the gas params for our message
+    // Calling estimateAll to get the gas params for our message
     const L1ToL2MessageGasParams = await l1ToL2MessageGasEstimate.estimateAll(
         {
             from: await l1Greeter.address,
@@ -118,7 +118,7 @@ const main = async () => {
         `Current retryable base submission price is: ${L1ToL2MessageGasParams.maxSubmissionCost.toString()}`
     )
 
-    // get L2 gas price
+    // Get L2 gas price
     const gasPriceBid = await l2Provider.getGasPrice()
     console.log(`L2 gas price: ${gasPriceBid.toString()}`)
 
