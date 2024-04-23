@@ -1,17 +1,16 @@
 /**
  *
  * This script demonstrates how to send a message from L1 to L2 using the Arbitrum SDK
- * It also demonstrates how to estimate the gas params for the message.
  *
  * The script deploys two contracts to L1 and L2, and updates each contract with the the counterparties address.
  * It then sends a message from L1 to L2, and logs the L2 greeting.
+ * It uses the Arbitrum SDK method, L1ToL2MessageGasEstimator to estimate the gas params for the message.
  */
 
-
-// Standard imports
+// Make sure your hardhat is on 👷
 const hre = require('hardhat')
 
-// ethers imports
+// Ethers imports
 const ethers = require('ethers')
 const { providers, Wallet } = ethers
 const { BigNumber } = require('@ethersproject/bignumber')
@@ -27,7 +26,7 @@ const {
 const { getBaseFee } = require('@arbitrum/sdk/dist/lib/utils/lib')
 const { arbLog, requireEnvVariables } = require('./arb-shared-dependencies')
 
-// Environment variables
+// You'll need a wallet and RPC URLs, otherwise thou shalt not pass
 requireEnvVariables(['DEVNET_PRIVKEY', 'L2RPC', 'L1RPC'])
 
 // Set up L1/L2 wallets from the same key. Make sure to populate .env and have it funded on both Ethereum/Arbitrum Sepolia.
@@ -42,8 +41,7 @@ const l2Wallet = new Wallet(walletPrivateKey, l2Provider)
 const main = async () => {
     await arbLog('Cross-chain Greeter')
 
-
-    // INITIAL SETUP
+    // 1. INITIAL SETUP
     // Getting the inbox address using the Arbitrum SDK
     const l2Network = await getL2Network(l2Provider)
     const ethBridger = new EthBridger(l2Network)
@@ -90,7 +88,7 @@ const main = async () => {
     const currentL2Greeting = await l2Greeter.greet()
     console.log(`Current L2 greeting: "${currentL2Greeting}"`)
 
-    // 💌 🔑 L1 to L2 message 🔑 💌
+    // 2. 💌 🔑 L1 to L2 message 🔑 💌
     // ESTIMATING GAS NEEDED TO DEPOSIT ON L1 TO COVER L2 GAS
     console.log('Updating greeting from L1 to L2:')
     const newGreeting = 'Greeting from far, far away'
@@ -144,7 +142,7 @@ const main = async () => {
     )
 
 
-    // CHECK IF MESSAGE WAS REDEEMED ON L2
+    // 3. CHECK IF MESSAGE WAS REDEEMED ON L2
     const l1TxReceipt = new L1TransactionReceipt(setGreetingRec)
     const messages = await l1TxReceipt.getL1ToL2Messages(l2Wallet)
     const message = messages[0]
